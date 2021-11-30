@@ -2,16 +2,17 @@
 
 namespace MoonMQ.Core
 {
-    public record struct Cluster
+    public record class Cluster
         : IDisposable
     {
         private readonly IDictionary<string, GrpcChannel> peerChannels;
         private bool disposed = false;
 
-        public Cluster(int minTimerMillis, int maxTimerMillis, string[] peers)
+        public Cluster(string serverId, int minTimerMillis, int maxTimerMillis, string[] peers)
         {
             ArgumentNullException.ThrowIfNull(peers, nameof(peers));
 
+            ServerId = serverId;
             MinTimerMillis = minTimerMillis;
             MaxTimerMillis = maxTimerMillis;
             Peers = peers;
@@ -19,6 +20,7 @@ namespace MoonMQ.Core
             peerChannels = new Dictionary<string, GrpcChannel>();
         }
 
+        public string ServerId { get; }
         public int MinTimerMillis { get; }
         public int MaxTimerMillis { get; }
         public string[] Peers { get; }
