@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  moonmq.hosting:
+    image: ${DOCKER_REGISTRY-}moonmqhosting
+    build:
+      context: .
+      dockerfile: MoonMQ.Hosting/Dockerfile

@@ -8,6 +8,14 @@ namespace MoonMQ.Core
         private readonly IDictionary<string, GrpcChannel> peerChannels;
         private bool disposed = false;
 
+        public Cluster()
+        {
+            ServerId = string.Empty;
+
+            Peers = Array.Empty<string>();
+            peerChannels = new Dictionary<string, GrpcChannel>();
+        }
+
         public Cluster(string serverId, int minTimerMillis, int maxTimerMillis, string[] peers)
         {
             ArgumentNullException.ThrowIfNull(peers, nameof(peers));
@@ -20,10 +28,10 @@ namespace MoonMQ.Core
             peerChannels = new Dictionary<string, GrpcChannel>();
         }
 
-        public string ServerId { get; }
-        public int MinTimerMillis { get; }
-        public int MaxTimerMillis { get; }
-        public string[] Peers { get; }
+        public string ServerId { get; set; }
+        public int MinTimerMillis { get; set; }
+        public int MaxTimerMillis { get; set; }
+        public string[] Peers { get; set; }
 
         public int MajorityThreshold => (int)(0.5 * Peers.Length);
 
@@ -36,6 +44,7 @@ namespace MoonMQ.Core
             }
 
             disposed = true;
+            GC.SuppressFinalize(this);
         }
 
         internal Task<MoonResult> RequestVoteAsync(int currentTerm,
@@ -97,6 +106,11 @@ namespace MoonMQ.Core
             var call = client.AppendEntriesAsync(message, cancellationToken: token);
 
             return call.ResponseAsync;
+        }
+
+        public override string ToString()
+        {
+            return System.Text.Json.JsonSerializer.Serialize(this);
         }
     }
 }

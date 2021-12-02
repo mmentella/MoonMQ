@@ -33,7 +33,6 @@ namespace MoonMQ.Core
 
         public MoonMQ(Cluster cluster, ILogger<MoonMQ> logger)
         {
-            ArgumentNullException.ThrowIfNull(serverId, nameof(serverId));
             ArgumentNullException.ThrowIfNull(cluster, nameof(cluster));
             ArgumentNullException.ThrowIfNull(logger, nameof(logger));
 
@@ -41,7 +40,7 @@ namespace MoonMQ.Core
             this.logger = logger;
 
             state = ServerState.Stopped;
-            this.serverId = cluster.ServerId;
+            serverId = cluster.ServerId;
 
             electionTimeSpan = GetRandomTimespan();
             heartbeatTimeSpan = TimeSpan.FromMilliseconds(cluster.MinTimerMillis).Divide(2);
