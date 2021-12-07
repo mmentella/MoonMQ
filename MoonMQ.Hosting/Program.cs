@@ -15,7 +15,7 @@ builder.Services.AddSingleton<MoonMQ.Core.MoonMQ>(sp =>
     IOptions<MoonMQ.Core.Cluster> options = sp.GetService<IOptions<MoonMQ.Core.Cluster>>();
     ILogger<MoonMQ.Core.MoonMQ> logger = sp.GetService<ILogger<MoonMQ.Core.MoonMQ>>();
 
-    MoonMQ.Core.MoonMQ moonmq = new MoonMQ.Core.MoonMQ(options.Value, logger);
+    MoonMQ.Core.MoonMQ moonmq = new(options.Value, logger);
     moonmq.Start();
 
     return moonmq;

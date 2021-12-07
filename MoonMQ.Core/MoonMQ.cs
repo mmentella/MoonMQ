@@ -56,6 +56,7 @@ namespace MoonMQ.Core
             matchIndex = cluster.Peers.ToDictionary(p => p, p => 0);
 
             this.logger.LogInformation("{serverId} - New Raft Created", serverId);
+            this.logger.LogInformation("{serverId} - {cluster}", serverId, cluster.ToString());
         }
 
         public string Id => serverId;
@@ -257,6 +258,12 @@ namespace MoonMQ.Core
 
         private async Task SendHeartbeatAsync()
         {
+            if (cluster.Peers.Length == 0)
+            {
+                logger.LogInformation("{serverId} - I'm my own leader :(", serverId);
+                return;
+            }
+
             CancellationTokenSource tokenSource = new();
             ParallelOptions options = new()
             {

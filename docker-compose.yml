@@ -1,8 +1,29 @@
 version: '3.4'
 
 services:
-  moonmq.hosting:
-    image: ${DOCKER_REGISTRY-}moonmqhosting
+  methis:
+    image: methis
     build:
       context: .
       dockerfile: MoonMQ.Hosting/Dockerfile
+    environment:
+    - URLS=https://localhost:4300
+    - CLUSTER__SERVERID=methis
+    - CLUSTER__MINTIMERMILLIS=15000
+    - CLUSTER__MAXTIMERMILLIS=16000
+    - CLUSTER__PEERS_0=thebe:4301
+    ports:
+    - 4300:4300
+  thebe:
+    image: thebe
+    build:
+      context: .
+      dockerfile: MoonMQ.Hosting/Dockerfile
+    environment:
+    - URLS=https://localhost:4301
+    - CLUSTER__SERVERID=thebe
+    - CLUSTER__MINTIMERMILLIS=17000
+    - CLUSTER__MAXTIMERMILLIS=18000
+    - CLUSTER__PEERS__0=methis:4300
+    ports:
+    - 4301:4301
