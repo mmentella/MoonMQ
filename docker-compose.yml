@@ -1,29 +1,63 @@
 version: '3.4'
 
 services:
-  methis:
-    image: methis
+  metis:
+    image: metis
     build:
       context: .
       dockerfile: MoonMQ.Hosting/Dockerfile
     environment:
-    - URLS=https://localhost:4300
-    - CLUSTER__SERVERID=methis
-    - CLUSTER__MINTIMERMILLIS=15000
-    - CLUSTER__MAXTIMERMILLIS=16000
-    - CLUSTER__PEERS_0=thebe:4301
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - CLUSTER__SERVERID=metis
+      - CLUSTER__MINTIMERMILLIS=15000
+      - CLUSTER__MAXTIMERMILLIS=16000
+      - CLUSTER__PEERS__0=http://thebe
+      - CLUSTER__PEERS__1=http://leda
     ports:
-    - 4300:4300
+      - 4300:443
+      - 4800:80
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    hostname: metis
+    container_name: metis
   thebe:
     image: thebe
     build:
       context: .
       dockerfile: MoonMQ.Hosting/Dockerfile
     environment:
-    - URLS=https://localhost:4301
-    - CLUSTER__SERVERID=thebe
-    - CLUSTER__MINTIMERMILLIS=17000
-    - CLUSTER__MAXTIMERMILLIS=18000
-    - CLUSTER__PEERS__0=methis:4300
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - CLUSTER__SERVERID=thebe
+      - CLUSTER__MINTIMERMILLIS=170000000
+      - CLUSTER__MAXTIMERMILLIS=180000000
+      - CLUSTER__PEERS__0=http://metis
+      - CLUSTER__PEERS__1=http://leda
     ports:
-    - 4301:4301
+      - 4301:443
+      - 4801:80
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    hostname: thebe
+    container_name: thebe
+  leda:
+    image: leda
+    build:
+      context: .
+      dockerfile: MoonMQ.Hosting/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - CLUSTER__SERVERID=leda
+      - CLUSTER__MINTIMERMILLIS=170000000
+      - CLUSTER__MAXTIMERMILLIS=180000000
+      - CLUSTER__PEERS__0=http://metis
+      - CLUSTER__PEERS__1=http://thebe
+    ports:
+      - 4302:443
+      - 4802:80
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    hostname: leda
+    container_name: leda

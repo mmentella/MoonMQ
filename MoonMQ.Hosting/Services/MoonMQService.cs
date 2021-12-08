@@ -17,21 +17,22 @@ namespace MoonMQ.Hosting.Services
         public override Task<Core.MoonResult> RequestVote(Core.RequestVoteMessage request,
                                                           ServerCallContext context)
         {
-            return Task.FromResult(new Core.MoonResult
-            {
-                Success = true,
-                Term = request.Term,
-            });
+            Core.MoonResult? result = moonmq.RequestVote(request.Term, request.CandidateId, request.LastLogIndex, request.LastLogTerm);
+
+            return Task.FromResult(result);
         }
 
         public override Task<Core.MoonResult> AppendEntries(Core.AppendEntriesMessage request,
                                                             ServerCallContext context)
         {
-            return Task.FromResult(new Core.MoonResult
-            {
-                Success = true,
-                Term = request.Term,
-            });
+            Core.Record[]? records = request.Records.ToArray();
+            Core.MoonResult? result = moonmq.AppendEntries(request.Term,
+                                                           request.LeaderId,
+                                                           request.PrevLogIndex,
+                                                           request.PrevLogTerm,
+                                                           records,
+                                                           request.LeaderCommit);
+            return Task.FromResult(result);
         }
     }
 }

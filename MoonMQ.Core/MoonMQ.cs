@@ -199,7 +199,7 @@ namespace MoonMQ.Core
                 logger.LogInformation("{serverId} - New State {state}", serverId, state);
 
                 logger.LogInformation("{serverId} - Start RequestVoteAsync", serverId);
-                await RequestVoteAsync();
+                await SendRequestVoteAsync();
                 logger.LogInformation("{serverId} - End RequestVoteAsync", serverId);
             }
         }
@@ -214,7 +214,7 @@ namespace MoonMQ.Core
             }
         }
 
-        private async Task RequestVoteAsync()
+        private async Task SendRequestVoteAsync()
         {
             currentTerm += 1;
             votedFor = serverId;
@@ -223,19 +223,28 @@ namespace MoonMQ.Core
             CancellationTokenSource tokenSource = new();
             ParallelOptions options = new()
             {
-                MaxDegreeOfParallelism = cluster.Peers.Length - 1,
+                MaxDegreeOfParallelism = Math.Max(1, cluster.Peers.Length - 1),
                 CancellationToken = tokenSource.Token
             };
 
             Record last = records.LastOrDefault() ?? Record.Default;
             Task voteTask = Parallel.ForEachAsync(cluster.Peers.Except(new string[] { serverId }), options, async (peer, token) =>
              {
-                 MoonResult result = await cluster.RequestVoteAsync(currentTerm,
-                                                                    serverId,
-                                                                    last.Index,
-                                                                    last.Term,
-                                                                    peer,
-                                                                    token);
+                 MoonResult result = new(currentTerm, false); ;
+                 try
+                 {
+                     result = await cluster.RequestVoteAsync(currentTerm,
+                                                             serverId,
+                                                             last.Index,
+                                                             last.Term,
+                                                             peer,
+                                                             token);
+                 }
+                 catch (Exception e)
+                 {
+                     logger.LogError(e, "{serverId} - Error during RequestVote to peer {peer}", serverId, peer);
+                 }
+
                  logger.LogInformation("{serverId} - Received result {result} from {peer}", serverId, result, peer);
                  currentTerm = result.Term;
                  if (result.Success) { Interlocked.Increment(ref votes); }
@@ -267,7 +276,7 @@ namespace MoonMQ.Core
             CancellationTokenSource tokenSource = new();
             ParallelOptions options = new()
             {
-                MaxDegreeOfParallelism = cluster.Peers.Length,
+                MaxDegreeOfParallelism = Math.Max(1, cluster.Peers.Length - 1),
                 CancellationToken = tokenSource.Token
             };
 
@@ -276,15 +285,24 @@ namespace MoonMQ.Core
              {
                  Record[] appendRecord = records.Skip(nextIndex[peer] - 1)
                                                 .ToArray();
-                 MoonResult result = await cluster.AppendEntriesAsync(currentTerm,
-                                                                      serverId,
-                                                                      last.Index,
-                                                                      last.Term,
-                                                                      appendRecord,
-                                                                      commitIndex,
-                                                                      peer,
-                                                                      token);
+                 MoonResult result = new(currentTerm, false);
+                 try
+                 {
+                     result = await cluster.AppendEntriesAsync(currentTerm,
+                                                               serverId,
+                                                               last.Index,
+                                                               last.Term,
+                                                               appendRecord,
+                                                               commitIndex,
+                                                               peer,
+                                                               token);
+                 }
+                 catch (Exception e)
+                 {
+                     logger.LogError(e, "{serverId} - Error during SendHeartbeatAsync to peer {peer}", serverId, peer);
+                 }
                  logger.LogInformation("{serverId} - SendHeartbeatAsync Received {result} From {peer}", serverId, result, peer);
+
                  if (result.Term > currentTerm)
                  {
                      logger.LogInformation("{serverId} - SendHeartbeatAsync Received Term {} greather than CurrentTerm {currentTerm}", serverId, result.Term, currentTerm);
@@ -310,6 +328,7 @@ namespace MoonMQ.Core
                      nextIndex[peer] = Math.Max(0, nextIndex[peer] - 1);
                  }
              });
+
             logger.LogInformation("{serverId} - Waitinng SendHeartbeatAsync to Peers", serverId);
             await appendTask.WaitAsync(tokenSource.Token);
             logger.LogInformation("{serverId} - SendHeartbeatAsync to Peers Completed", serverId);

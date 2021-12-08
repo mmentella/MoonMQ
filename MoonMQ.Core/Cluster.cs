@@ -96,6 +96,7 @@ namespace MoonMQ.Core
 
             var message = new AppendEntriesMessage
             {
+                Term = currentTerm,
                 LeaderCommit = commitIndex,
                 LeaderId = serverId,
                 PrevLogIndex = index,

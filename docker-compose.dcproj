@@ -2,6 +2,7 @@
 <Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
   <PropertyGroup Label="Globals">
     <ProjectVersion>2.1</ProjectVersion>
+	<DockerComposeProjectName>moonmq</DockerComposeProjectName>
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>4b40a3f7-012e-4480-8b10-a67a8cc775f7</ProjectGuid>
   </PropertyGroup>

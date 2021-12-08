@@ -7,19 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
 
-builder.Services.Configure<MoonMQ.Core.Cluster>(
-    builder.Configuration.GetSection(nameof(MoonMQ.Core.Cluster))
-);
-builder.Services.AddSingleton<MoonMQ.Core.MoonMQ>(sp =>
-{
-    IOptions<MoonMQ.Core.Cluster> options = sp.GetService<IOptions<MoonMQ.Core.Cluster>>();
-    ILogger<MoonMQ.Core.MoonMQ> logger = sp.GetService<ILogger<MoonMQ.Core.MoonMQ>>();
-
-    MoonMQ.Core.MoonMQ moonmq = new(options.Value, logger);
-    moonmq.Start();
-
-    return moonmq;
-});
+//Add MoonMQ Services
+builder.Services.AddMoonMQ(builder.Configuration);
 
 var app = builder.Build();
 
@@ -27,9 +16,9 @@ var app = builder.Build();
 app.MapGrpcService<MoonMQService>();
 app.MapGrpcReflectionService();
 
-app.MapGet("/", ctx =>
-    {
-        return Task.FromResult("MoonMQ");
-    });
+app.MapGet("/", () => "MoonMQ");
+
+// Start MoonMQ
+
 
 app.Run();
