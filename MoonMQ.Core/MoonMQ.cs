@@ -82,7 +82,7 @@ namespace MoonMQ.Core
             leaderId = null;
             bool voteGranted = (votedFor is null || votedFor == candidateId) &&
                     lastLogIndex >= commitIndex &&
-                    lastLogTerm >= records.LastOrDefault()?.Term;
+                    lastLogTerm >= (records.LastOrDefault()?.Term ?? 0);
             logger.LogInformation("{serverId} - {votedfor}, {candidate}, " +
                                                "{index}, {commit}, " +
                                                "{term}, {current}",
@@ -165,6 +165,8 @@ namespace MoonMQ.Core
                     return new(currentTerm, false);
                 }
 
+                //apply to wal
+
                 lastApplied =
                     commitIndex =
                     Math.Min(leaderCommit, this.records.Last().Index);
@@ -230,7 +232,7 @@ namespace MoonMQ.Core
             Record last = records.LastOrDefault() ?? Record.Default;
             Task voteTask = Parallel.ForEachAsync(cluster.Peers.Except(new string[] { serverId }), options, async (peer, token) =>
              {
-                 MoonResult result = new(currentTerm, false); ;
+                 MoonResult result = new(currentTerm, false);
                  try
                  {
                      result = await cluster.RequestVoteAsync(currentTerm,
@@ -329,7 +331,7 @@ namespace MoonMQ.Core
                  }
              });
 
-            logger.LogInformation("{serverId} - Waitinng SendHeartbeatAsync to Peers", serverId);
+            logger.LogInformation("{serverId} - Waiting SendHeartbeatAsync to Peers", serverId);
             await appendTask.WaitAsync(tokenSource.Token);
             logger.LogInformation("{serverId} - SendHeartbeatAsync to Peers Completed", serverId);
 

@@ -10,8 +10,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - CLUSTER__SERVERID=metis
-      - CLUSTER__MINTIMERMILLIS=15000
-      - CLUSTER__MAXTIMERMILLIS=16000
+      - CLUSTER__MINTIMERMILLIS=1000
+      - CLUSTER__MAXTIMERMILLIS=1500
       - CLUSTER__PEERS__0=http://thebe
       - CLUSTER__PEERS__1=http://leda
     ports:
