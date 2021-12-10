@@ -22,7 +22,9 @@ namespace MoonMQ.Core
 
         public int FullLength => Size + Length;
 
-        public bool IsNull()
+        public Record Metadata => new(Index, Position, Length, Timestamp, Term);
+
+        public bool IsEmpty()
         {
             return Index == 0 &&
                 Position == 0 &&
@@ -30,16 +32,16 @@ namespace MoonMQ.Core
                 Timestamp == 0;
         }
 
-        public byte[] Marshal()
-        {
-            return Enumerable.Empty<byte>()
-                .Concat(BitConverter.GetBytes(Index))
-                .Concat(BitConverter.GetBytes(Position))
-                .Concat(BitConverter.GetBytes(Length))
-                .Concat(BitConverter.GetBytes(Timestamp))
-                .Concat(BitConverter.GetBytes(Term))
-                .ToArray();
-        }
+        public byte[] Marshal() => Enumerable.Empty<byte>()
+                                             .Concat(BitConverter.GetBytes(Index))
+                                             .Concat(BitConverter.GetBytes(Position))
+                                             .Concat(BitConverter.GetBytes(Length))
+                                             .Concat(BitConverter.GetBytes(Timestamp))
+                                             .Concat(BitConverter.GetBytes(Term))
+                                             .ToArray();
+
+        public byte[] MarshalWithData() => Marshal().Concat(GetData())
+                                                    .ToArray();
 
         public static Record Unmarshall(byte[] record)
         {
@@ -71,6 +73,11 @@ namespace MoonMQ.Core
                                                   .ToArray());
 
             return new Record(offset, position, length, timestamp, term);
+        }
+
+        public byte[] GetData()
+        {
+            return Data.ToArray();
         }
 
         private string GetDebuggerDisplay() => JsonSerializer.Serialize(this);

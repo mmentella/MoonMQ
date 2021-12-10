@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MoonMQ.Core.Log;
 
 namespace MoonMQ.Core
 {
@@ -9,6 +10,7 @@ namespace MoonMQ.Core
         private readonly ILogger<MoonMQ> logger;
 
         private readonly Cluster cluster;
+        private readonly WriteAheadLog writeAheadLog;
 
         private readonly TimeSpan electionTimeSpan;
         private readonly TimeSpan heartbeatTimeSpan;
@@ -54,6 +56,8 @@ namespace MoonMQ.Core
             records = Enumerable.Empty<Record>().ToList();
             nextIndex = cluster.Peers.ToDictionary(p => p, p => records.LastOrDefault()?.Term ?? 0);
             matchIndex = cluster.Peers.ToDictionary(p => p, p => 0);
+
+            writeAheadLog = new(serverId);
 
             this.logger.LogInformation("{serverId} - New Raft Created", serverId);
             this.logger.LogInformation("{serverId} - {cluster}", serverId, cluster.ToString());
@@ -166,6 +170,10 @@ namespace MoonMQ.Core
                 }
 
                 //apply to wal
+                foreach (var record in toApply)
+                {
+                    writeAheadLog.Push(record.GetData(), record.Term);
+                }
 
                 lastApplied =
                     commitIndex =

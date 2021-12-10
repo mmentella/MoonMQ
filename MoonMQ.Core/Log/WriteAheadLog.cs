@@ -46,6 +46,17 @@
             return record;
         }
 
+        public void Push(Record record)
+        {
+            writer.Write(record.MarshalWithData());
+            writer.Flush();
+
+            mapwriter.Write(record.Marshal());
+            mapwriter.Flush();
+
+            offsetMap.Add(offsetMap.Count + 1, record.Metadata);
+        }
+
         public byte[] Pull(int offset)
         {
             if (!offsetMap.TryGetValue(offset, out Record record)) { return Array.Empty<byte>(); }
@@ -90,7 +101,7 @@
                 if (byteRead < Record.Size) { continue; }
 
                 record = Record.Unmarshall(byterecord);
-                if (record.IsNull()) { continue; }
+                if (record.IsEmpty()) { continue; }
 
                 offsetMap.Add(record.Index, record);
             }

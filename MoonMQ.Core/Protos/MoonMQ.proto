@@ -15,6 +15,7 @@ message Record{
   int32 length = 3;
   int64 timestamp = 4;
   int32 term = 5;
+  bytes data = 6;
 }
 
 message AppendEntriesMessage {
